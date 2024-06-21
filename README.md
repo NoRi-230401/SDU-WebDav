@@ -61,7 +61,7 @@ FileSystemが変更されますと、一度リブートします。その後、�
 以下の情報を基に作成しました。
 <br><br>
 
-GitHub<br>
+ESPWebDAVライブラリのGitHub<br>
 https://github.com/d-a-v/ESPWebDAV<br>
 
 たなかまさゆき さん(@tnkmasayuki)<br>
@@ -69,5 +69,8 @@ https://lang-ship.com/blog/work/esp32-webdav/#toc3<br><br>
 
 リナちゃん@chrmlinux03<br>
 https://qiita.com/chrmlinux03/items/5d65893760dad6f4bee0<br>
+
+このソフトのGitHub<br>
+https://github.com/NoRi-230401/SDU-WebDav<br>
 
 <br><br><br>
