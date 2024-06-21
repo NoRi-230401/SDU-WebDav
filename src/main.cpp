@@ -7,8 +7,8 @@
 #define APP_NAME "SDU-WebDav"    // app Name
 #define APP_BIN "/00_WebDav.bin" // app bin file-name
 #define TIMEOUT00 5000           // lobby countdouwn timeout : msec
-#define STASSID "YOUR_SSID"      // 自分のルータSSID
-#define STAPSK "YOUR_SSID_PASS"  // 自分のルータPassword
+// #define STASSID "YOUR_SSID"      // 自分のルータSSID
+// #define STAPSK "YOUR_SSID_PASS"  // 自分のルータPassword
 #define HOSTNAME "webDav"
 #define WIFI_TXT "/wifi.txt"
 
@@ -19,32 +19,53 @@ FS &gfs = SD;
 WiFiServer tcp(80);
 ESPWebDAV dav;
 
-#define MD00 0  // init
-#define MD01 1  // setup start
-#define MD02 2  // Normal (setup end -> Loop in )
-#define MD03 3  // Special Mode 
+#define MDM2 -2  // init
+#define MDM1 -1  // setup start
+#define MD00 0   // setup don (Normal mode)
+#define MD01 1   // MD01  FileSystem change
+#define MD02 2   // MD02  load menu.bin
+#define MD03 3   // MD03  save bin to SD
+#define MD04 4   // MD04  power off
 
-int MODE_ST = MD00;
+#define MD_END 4 //
+int MODE_ST = MDM2; // mode status
 
+#define FS_SD 1
+#define FS_SPIFFS 2
+int WD_FILE_SYSTEM = FS_SD;
+const char *SETTING_NVS = "setting"; // setting --NVS の設定用ファイル
 
 void setup(void)
 {
-  MODE_ST = MD01;
+  MODE_ST = MDM1;
   auto cfg = M5.config();
   M5.begin(cfg);
-  
-  // SDUpdater Lobby Screen 
+
+  // SDUpdater Lobby Screen
   SDCARD_CS_PIN = (int)M5.getPin(m5::sd_spi_cs);
   setupSDUpdater(APP_NAME);
-  
+
   // Disp setup
-  MD02_disp();
-  prtln(String(APP_VER), D3_BOTH);
+  MD00_disp();
+  prtln(String(APP_VER), D1_SERI);
 
   // SD begin
   if (!SdBegin())
   {
     prtln("SD Begin fail", D3_BOTH);
+    REBOOT();
+  }
+  
+  // wifi.txt read
+  if (wifiTxtSDRead())
+  {
+    prtln("wifi.txt read success ", D1_SERI);
+    prtln("SSID = " + SSID, D1_SERI);
+    prtln("SSID_PASS = " + SSID_PASS, D1_SERI);
+  }
+  else
+  {
+    prtln("wifi.txt read fail", D3_BOTH);
     REBOOT();
   }
 
@@ -58,25 +79,44 @@ void setup(void)
     REBOOT();
   }
 
+  // File System Setting Read from NVM
+  WD_FILE_SYSTEM = getFileSystemNVM();
+  if(WD_FILE_SYSTEM == FS_SPIFFS)
+  {
+    gfs = SPIFFS;
+    prtln("FileSystem is SPIFFS",D3_BOTH);
+  }
+  else
+  {
+    gfs = SD;
+    prtln("FileSystem is SD",D3_BOTH);
+  }
+  setFileSystemNVM(WD_FILE_SYSTEM);
+  // ----------------------------------
+
   wifi_setup();
   webDav_setup();
   ntp_setup();
 
   prtln("\n------------------------", D3_BOTH);
-  prtln("file://" + String(HOSTNAME) + "/DavWWWRoot", D3_BOTH);
+  prtln("  //" + String(HOSTNAME) + "/DavWWWRoot", D3_BOTH);
   prtln("------------------------", D3_BOTH);
   prtln("--- setup done ! ---", D1_SERI);
-  MODE_ST = MD02;
+  MODE_ST = MD00;
+}
+
+void BtnChk()
+{
+  if (MODE_ST == MD00)
+    MD00_BtnChk();
+  else if ((MODE_ST > MD00) && (MODE_ST <= MD_END))
+    MDxx_BtnChk();
 }
 
 void loop(void)
 {
   M5.update();
-  
-  if(MODE_ST == MD02)
-    MD02_BtnChk();
-  else if(MODE_ST == MD03)
-    MD03_BtnChk();
+  BtnChk();
 
   dav.handleClient();
   delay(1);
@@ -110,49 +150,83 @@ void setupSDUpdater(const char *appName)
       SDCARD_CS_PIN);
 }
 
-void MD02_BtnChk()
+void MD00_BtnChk()
 {
-  if ( M5.BtnB.wasHold() )
+  if (M5.BtnB.wasHold())
   {
-    prtln("BtnB was Hold ,  goto MD03",D1_SERI);
-    MODE_ST = MD03;   // Special Mode in
-    MD03_disp();
+    prtln("BtnB was Hold ,  goto Special Mode", D1_SERI);
+    MODE_ST = MD01; // Special Mode in
+    MDxx_disp(MODE_ST);
     delay(100);
   }
 }
 
-
-void MD03_BtnChk()
+void MDxx_BtnChk()
 {
   if (M5.BtnA.wasClicked())
   {
-    prtln("BtnA Cliked! goto Normal Mode",D1_SERI);
-    MD02_disp();
-    MODE_ST = MD02;  // -- normal mode
+    prtln("BtnA Cliked! [EXIT]", D1_SERI);
+    MD00_disp();
+    MODE_ST = MD00; // -- normal mode
     delay(100);
   }
   else if (M5.BtnB.wasClicked())
   {
-    M5.Log.println("Will Load menu binary");
-    updateFromFS(SD);
-    REBOOT();
+    prtln("BtnB Cliked!  [OK]", D1_SERI);
+    doWork(MODE_ST);
+    MDxx_disp(MODE_ST);
   }
-  // else if (M5.BtnC.wasPressed())
   else if (M5.BtnC.wasClicked())
   {
-    prtln("BtnC was Clicked -> goto PowerOff",D3_BOTH);
-    POWER_OFF();
+    prtln("BtnC Cliked!  [NEXT]", D1_SERI);
+    MODE_ST++;
+    if (MODE_ST > MD_END)
+      MODE_ST = MD01;
 
-    // M5.Log.println("Will store BIN_FILE to SD");
-    // saveSketchToFS(SD, APP_BIN);
-    // MD03_disp();
-    // delay(500);
+    MDxx_disp(MODE_ST);
   }
 }
 
+void doWork(int mode)
+{
+  switch (mode)
+  {
+  case MD01:
+    M5.Log.println("FileSystem change");
+    if(WD_FILE_SYSTEM == FS_SD)
+      setFileSystemNVM(FS_SPIFFS);
+    else
+      setFileSystemNVM(FS_SD);
 
+    REBOOT();
+    break;
 
-void MD02_disp()
+  case MD02:
+    M5.Log.println("Will Load menu binary");
+    updateFromFS(SD);
+    for(;;)
+    {
+      delay(10);
+    }
+    // REBOOT();
+    break;
+
+  case MD03:
+    M5.Log.println("Will store BIN_FILE to SD");
+    saveSketchToFS(SD, APP_BIN);
+    delay(500);
+    break;
+
+  case MD04:
+    POWER_OFF();
+    break;
+
+  default:
+    break;
+  }
+}
+
+void MD00_disp()
 {
   M5.Display.setTextFont(1);
   M5.Display.setTextSize(2);
@@ -161,12 +235,11 @@ void MD02_disp()
   M5.Display.setCursor(0, 0);
   M5.Display.fillScreen(BLACK);
   M5.Display.setTextScroll(true);
-
-  M5.Display.printf(" *** SDU-WebDav *** \n");
-  M5.Display.printf("(BtnB)Hold => Mode03\n\n");
+  M5.Display.printf(" ****  SDU-WebDav  **** \n");
+  M5.Display.printf("(BtnB)hold => Special Mode\n\n");
 }
 
-void MD03_disp()
+void MDxx_disp(int mode)
 {
   M5.Display.setTextFont(1);
   M5.Display.setTextSize(2);
@@ -175,12 +248,39 @@ void MD03_disp()
   M5.Display.setCursor(0, 0);
   M5.Display.fillScreen(BLACK);
   M5.Display.setTextScroll(false);
-  
-  M5.Display.print("*** Mode03 *** \n\n");
-  M5.Display.print("(BtnA)click: exit to Normal Mode\n\n");
-  M5.Display.print("(BtnB)click: load menu binary\n");
-  M5.Display.print("(BtnB)hold : save bin to SD\n\n");
-  M5.Display.print("(BtnC)click: Power Off\n");
+
+  M5.Display.printf("**  Special Mode %d/%d  **\n\n", MODE_ST, MD_END);
+  String msg = "";
+  switch(MODE_ST)
+  {
+    case MD01:
+      if(WD_FILE_SYSTEM==FS_SD)
+        msg = "FileSystem SD -> SPIFFS";
+      else
+        msg = "FileSystem SPIFFS -> SD";
+      
+      break;
+
+    case MD02:
+      msg = "Load SD-Updater menu.bin";
+      break;
+
+    case MD03:
+      msg = "Store bin-file to SD";
+      break;
+
+    case MD04:
+      msg = "Power Off";
+      break;
+
+    default:
+      break;
+  }
+  prtln(msg,D2_DISP);
+
+  M5.Display.printf("\n\n\n(BtnA)click:    EXIT\n\n");
+  M5.Display.printf("(BtnB)click:    OK\n\n");
+  M5.Display.print( "(BtnC)click:    NEXT\n");
 }
 
 void wifi_setup()
@@ -188,23 +288,10 @@ void wifi_setup()
   WiFi.persistent(true);
   WiFi.setHostname(HOSTNAME);
   WiFi.mode(WIFI_STA);
-  // Serial.begin(115200);
-  // Serial.begin(921600);
-
-  if (wifiTxtSDRead())
-  {
-    prtln("wifi.txt read success ", D1_SERI);
-    prtln("SSID = " + SSID, D1_SERI);
-    prtln("SSID_PASS = " + SSID_PASS, D1_SERI);
-    prt("Connecting to " + String(SSID), D3_BOTH);
-    WiFi.begin(SSID.c_str(), SSID_PASS.c_str());
-  }
-  else
-  {
-    prtln("wifi.txt read fail", D3_BOTH);
-    REBOOT();
-  }
-
+  
+  prt("Connecting to " + String(SSID), D3_BOTH);
+  WiFi.begin(SSID.c_str(), SSID_PASS.c_str());
+  
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
@@ -214,7 +301,6 @@ void wifi_setup()
   prtln("IP_Addr: " + WiFi.localIP().toString(), D3_BOTH);
   prtln("RSSI: " + String(WiFi.RSSI()), D1_SERI);
 }
-
 
 void webDav_setup()
 {
@@ -232,17 +318,12 @@ void webDav_setup()
   prtln("Server Started !", D1_SERI);
 }
 
-// void loopServer()
-// {
-//   dav.handleClient();
-// }
-
 bool SdBegin()
 {
   // --- SD begin -------
   int i = 0;
   bool success = false;
-  prtln("SD.begin Start",D1_SERI);
+  prtln("SD.begin Start", D1_SERI);
 
   while (i < 3)
   { // SDカードマウント待ち
@@ -251,14 +332,14 @@ bool SdBegin()
     if (success)
       return true;
 
-    prtln("SD Wait...",D1_SERI);
+    prtln("SD Wait...", D1_SERI);
     delay(500);
     i++;
   }
 
   if (i >= 3)
   {
-    prtln("SD.begin faile",D3_BOTH);
+    prtln("SD.begin faile", D3_BOTH);
     return false;
   }
   else
@@ -302,10 +383,6 @@ bool wifiTxtSDRead()
   // SD.end();
   return true;
 }
-
-// #define D1_SERI 1
-// #define D2_DISP 2
-// #define D3_BOTH 3
 
 void prt(String sData, int direction)
 {
@@ -362,3 +439,41 @@ void REBOOT()
     delay(10);
   }
 }
+
+
+void setFileSystemNVM(int flSys)
+{
+  size_t tmp_flSys;
+  
+  if ((flSys < FS_SD) || (flSys > FS_SPIFFS))
+    tmp_flSys = FS_SD;
+  else
+    tmp_flSys = flSys;  
+
+  if(tmp_flSys == FS_SD)
+    prtln("FileSyste set to SD",D1_SERI);
+  if(tmp_flSys == FS_SPIFFS)
+    prtln("FileSyste set to SPIFFS",D1_SERI);
+
+  uint32_t nvs_handle;
+  if (ESP_OK == nvs_open(SETTING_NVS, NVS_READWRITE, &nvs_handle))
+    nvs_set_u32(nvs_handle, "wdFlSys", tmp_flSys);
+  nvs_close(nvs_handle);
+}
+
+
+int getFileSystemNVM()
+{
+  uint32_t nvs_handle;
+  size_t getFlSys = FS_SD;
+
+  if (ESP_OK == nvs_open(SETTING_NVS, NVS_READONLY, &nvs_handle))
+    nvs_get_u32(nvs_handle, "wdFlSys", &getFlSys);
+  nvs_close(nvs_handle);
+
+  if ( getFlSys < FS_SD || getFlSys > FS_SPIFFS)
+    getFlSys = FS_SD;
+  
+    return (int)getFlSys;
+}
+

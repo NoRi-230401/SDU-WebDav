@@ -8,17 +8,22 @@
 #include <ESPmDNS.h>
 #include <SPIFFS.h>
 #include <LITTLEFS.h>
+#include <nvs.h>
 #include <ESPWebDAV.h>
 
+int getFileSystemNVM();
+void setFileSystemNVM(int flSys);
 
 void POWER_OFF();
 void REBOOT();
 void ntp_setup();
 
-void MD02_disp();
-void MD03_disp();
-void MD02_BtnChk();
-void MD03_BtnChk();
+void MD00_disp();
+void MDxx_disp(int mode);
+void doWork(int mode);
+
+void MD00_BtnChk();
+void MDxx_BtnChk();
 
 void setupSDUpdater(const char *appName);
 void webDav_setup();
