@@ -40,7 +40,7 @@ SDは、相性があるので注意。<br>
 ### PCからのアクセス
 PCは、win11で説明します。
 ファイルエクスプローラーの画面上部で場所の入力箇所に、全て半角の<br>
-<b>"￥￥webDav￥￥DavWWWRoot"</b>　と入力（￥マークも半角で入力）<br>
+<b>"￥￥webDav￥DavWWWRoot"</b>　と入力（￥マークも半角で入力）<br>
 webDav(HOSTNAME)の代わりに、<b>IPアドレス</b>を入れることもできます。<br><br>
 ![画像](images/s-pc01.png )<br>
 
