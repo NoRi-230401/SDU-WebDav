@@ -45,27 +45,31 @@ webDav(HOSTNAME)の代わりに、<b>IPアドレス</b>を入れることもで�
 ![画像](images/s-pc01.png )<br>
 
 接続が完了しますと、PCから通常の操作でM5StackCore2のSDまたは、SPIFFSのファイルを操作することができるようになります。<br><br>
-PCアイコンを右クリックするとネットワークドライブとして使用することもできます。<br>
+
+画面にショートカット等を作るとアクセスが簡単です。<br>
+<b>また、PCアイコンを右クリックして設定すると、ネットワークドライブとして割り当てて使用することもできます。</b><br>
+私は、PC（Win11）でしか確認していませんが、スマホや他の機種のPCでも接続できそうです。<br>
+<br><br>
+
 <br><br>
 
 ### Special Mode : (BtnB)の長押し<br>
 Special Modeの画面になり、FileSystemの変更(SD <-> SPIFFS)等ができます。<br>
 ![画像](images/s-webdav02.jpg )<br>
-
-FileSystemが変更されますと、一度リブートします。その後、変更後のFileSystemが有効になります。立上げ時に有効なFileSystemが表示されます。
+<br>
+FileSystemが変更されますと、一度リブートします。<br>
+その後、変更後のFileSystemが有効になります。<br>
 
 <br><br>
 
-## WebDavについて
-私は、PC（Win11）でしか確認していませんが、スマホや他の機種のPCでも接続できそうです。<br>
-以下の情報を基に作成しました。
-<br><br>
+## 参照情報
+以下の情報を参照しました。<br>
 
-ESPWebDAVライブラリのGitHub<br>
+ESPWebDAVライブラリ<br>
 https://github.com/d-a-v/ESPWebDAV<br>
 
 たなかまさゆき さん(@tnkmasayuki)<br>
-https://lang-ship.com/blog/work/esp32-webdav/#toc3<br><br>
+https://lang-ship.com/blog/work/esp32-webdav/#toc3<br>
 
 リナちゃん@chrmlinux03<br>
 https://qiita.com/chrmlinux03/items/5d65893760dad6f4bee0<br>
