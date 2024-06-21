@@ -18,7 +18,7 @@ Core2の場合では、下のリンクより<br>
 
 https://github.com/tobozo/M5Stack-SD-Updater/releases <br>
 
-file://stackchan/DavWWWRoot <br>
+"file:\\\\webDav\\DavWWWRoot" <br>
 
 file://192.168.0.16/DavWWWRoot <br>
 
