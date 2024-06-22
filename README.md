@@ -22,7 +22,7 @@ PC等から直接、M5Stack Core2のSD/SPIFFSにアクセスすることがで�
 <br>  
 
 ## 対応ハードウエア
-### 本体:　 M5Sstack Core2
+### 本体:　 M5Stack Core2
 - M5Stack Core2 for AWS（動作確認している機種）<br>
 - M5Stack Core2 <br>
 - M5Stack Core2 v1.1　<br>
