@@ -69,7 +69,7 @@ ESPWebDAVライブラリ<br>
 https://github.com/d-a-v/ESPWebDAV<br>
 
 たなかまさゆき さん(@tnkmasayuki)<br>
-https://lang-ship.com/blog/work/esp32-webdav/#toc3<br>
+https://lang-ship.com/blog/work/esp32-webdav/<br>
 
 リナちゃん@chrmlinux03<br>
 https://qiita.com/chrmlinux03/items/5d65893760dad6f4bee0<br>
