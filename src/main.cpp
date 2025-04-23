@@ -11,17 +11,13 @@ const String VERSION = "v102a-250423";
 const String GITHUB_URL = "https://github.com/NoRi-230401/SDU-WebDav";
 // -------------------------------------------------------
 
-void webDav_begin();
-// -------------------------------------------------------
-
-
 //--------------------
 // ***  SETTINGS  ***
 //--------------------
 #if defined(ENABLE_SD_SELECT)
-const int fs_select = FS_SD;        //SD     -- select file system
+FS &DAV_FS = SD;
 #else
-const int fs_select = FS_SPIFFS;    //SPIFFS -- select file system
+FS &DAV_FS = SPIFFS;
 #endif
 bool DISP_ON = true; // 'false' if don't disp message on the display
 //-------------------------------------------------------------------
@@ -33,9 +29,6 @@ const String YOUR_SSID_PASS = "your_wifi_ssid_password";
 const String YOUR_HOST_NAME = "stackchan";
 //-------------------------------------------------------------------
 
-bool SD_USE = false;
-bool SPIFFS_USE = false;
-FS &DAV_FS = SPIFFS;
 WiFiServer tcp(80);
 ESPWebDAV dav;
 
@@ -54,28 +47,11 @@ void setup(void)
   M5.Display.setBrightness(120);
   M5.Lcd.setTextSize(2);
 
-  if (fs_select == FS_SD)
-  {
-    SD_USE = true;
-    SPIFFS_USE = false;
-    DAV_FS = SD;
-  }
-  else if (fs_select == FS_SPIFFS)
-  {
-    SD_USE = false;
-    SPIFFS_USE = true;
-    DAV_FS = SPIFFS;
-  }
-  else
-  {
-    prt("\nERR: file system is invalid");
-    STOP();
-  }
-
-  if (!setupServer())
+  if (!setupNetwork())
     STOP();
 
-  webDav_begin();
+  tcp.begin();
+  dav.begin(&tcp, &DAV_FS);
 }
 
 void loop(void)
@@ -84,11 +60,3 @@ void loop(void)
   delay(1);
 }
 
-void webDav_begin()
-{
-  tcp.begin();
-  dav.begin(&tcp, &DAV_FS);
-  
-  // dav.setTransferStatusCallback([](const char *name, int percent, bool receive)
-  //                               { Serial.printf("%s:%s:%d%%\n", receive ? "recv" : "send", name, percent); });
-}

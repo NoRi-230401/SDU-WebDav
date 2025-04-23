@@ -5,7 +5,7 @@
 // *******************************************************
 #include "sdu_webDav.h"
 
-bool setupServer();
+bool setupNetwork();
 void prt(String message);
 String ConvBytesUnits(uint64_t bytes, int dp, int unit);
 bool wifiStart();
@@ -46,8 +46,11 @@ bool RTC_ADJUST_ON = false; // 'false' if don't adjust RTC
 
 String SSID, SSID_PASS, HOST_NAME,IP_ADDR;
 bool SD_ENABLE, SPIFFS_ENABLE;
+bool SD_USE = true;
+bool SPIFFS_USE = true;
 
-bool setupServer()
+
+bool setupNetwork()
 {
   prt("-   " + PROG_NAME + "   -\n");
 

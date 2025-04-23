@@ -10,28 +10,24 @@
 #include <M5Unified.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
-// #include <algorithm>
-// #include <vector>
 #include <SD.h>
-// #include <nvs.h>
 #include <SPIFFS.h>
 // #include <LITTLEFS.h>
 #include <time.h>
 #include <ESPWebDAV.h>
 
 // --- used in 'main.cpp' ---- 
-extern bool setupServer();
-extern void requestManage();
+extern bool setupNetwork();
 extern void STOP();
 //---------------------------
 
 
-typedef struct
-{
-  String filename;
-  String ftype;
-  String fsize;
-} fileinfo;
+// typedef struct
+// {
+//   String filename;
+//   String ftype;
+//   String fsize;
+// } fileinfo;
 
 //---- units ------
 #define UNIT_AUTO 1
@@ -60,11 +56,11 @@ extern String urlDecode(const String &input);
 extern const String PROG_NAME,VERSION,GITHUB_URL;
 extern const String YOUR_SSID, YOUR_SSID_PASS, YOUR_HOST_NAME;
 extern const String WIFI_TXT;
-extern bool SD_USE, SPIFFS_USE;
+// extern bool SD_USE, SPIFFS_USE;
 extern bool DISP_ON, RTC_ENABLE;
-extern bool RTC_ADJUST_ON;
-extern uint32_t TM_SETUP_DONE;
-extern uint32_t TM_RTC_ADJUST;
-extern uint32_t SHUTDOWN_TM_SEC;
+// extern bool RTC_ADJUST_ON;
+// extern uint32_t TM_SETUP_DONE;
+// extern uint32_t TM_RTC_ADJUST;
+// extern uint32_t SHUTDOWN_TM_SEC;
 // -------------------------------------------------------
 #endif
