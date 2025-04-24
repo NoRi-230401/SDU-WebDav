@@ -15,10 +15,6 @@ String getTmNTP();
 String getTmRTC();
 String strTmInfo(struct tm &timeInfo);
 bool getWiFiSettings(int flType, const String filename);
-String urlEncode(const String &input);
-String urlDecode(const String &input);
-void requestManage();
-void sendReq(int reqNo);
 void STOP();
 void REBOOT();
 void POWER_OFF();
@@ -27,7 +23,6 @@ bool SD_cardInfo(void);
 
 // -------------------------------------------------------
 uint32_t SHUTDOWN_TM_SEC = 3; // default 3sec after shutdown api
-int REQUEST_NO = REQ_NONE;
 
 // NTP connection information.
 #define NTP_SVR1 "ntp.nict.jp"         // NTP server1
@@ -38,10 +33,10 @@ int REQUEST_NO = REQ_NONE;
 // RTC adjust
 uint32_t TM_RTC_ADJUST = 10 * 1000L; // mSec : adjust after setup()
 uint32_t TM_SETUP_DONE = 0;
-bool RTC_ENABLE = false;
 
 ///////////////// 250423 by Nori ////////////
-bool RTC_ADJUST_ON = false; // 'false' if don't adjust RTC
+// bool RTC_ENABLE = false;
+// bool RTC_ADJUST_ON = false; // 'false' if don't adjust RTC
 ////////////////////////////////////////////
 
 String SSID, SSID_PASS, HOST_NAME,IP_ADDR;
@@ -137,9 +132,9 @@ bool setupNetwork()
   // }
 
   prt("\nIP Addr: " + IP_ADDR);
-  prt("\nHostName: " + HOST_NAME);
+  // prt("\nHostName: " + HOST_NAME);
 
-  TM_SETUP_DONE = millis();
+  // TM_SETUP_DONE = millis();
 
   return true;
 }
@@ -367,155 +362,6 @@ bool getWiFiSettings(int flType, const String filename)
   return true;
 }
 
-// URLエンコード関数
-String urlEncode(const String &input)
-{
-  String encodedString = "";
-  char c;
-  char code0;
-  char code1;
-  for (int i = 0; i < input.length(); i++)
-  {
-    c = input.charAt(i);
-    if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
-    {
-      encodedString += c;
-    }
-    else if (c == ' ')
-    {
-      encodedString += "%20";
-    }
-    else
-    {
-      code1 = (c & 0xf) + '0';
-      if ((c & 0xf) > 9)
-      {
-        code1 = (c & 0xf) - 10 + 'A';
-      }
-      c = (c >> 4) & 0xf;
-      code0 = c + '0';
-      if (c > 9)
-      {
-        code0 = c - 10 + 'A';
-      }
-      encodedString += '%';
-      encodedString += code0;
-      encodedString += code1;
-    }
-  }
-  return encodedString;
-}
-
-// URLデコード関数
-String urlDecode(const String &input)
-{
-  String decodedString = "";
-  char c;
-  char code0;
-  char code1;
-  for (int i = 0; i < input.length(); i++)
-  {
-    c = input.charAt(i);
-    if (c == '+')
-    { // '+' はスペースとしてデコードする場合もあるが、ここでは%20のみ対応
-      decodedString += ' ';
-    }
-    else if (c == '%')
-    {
-      i++;
-      if (i < input.length())
-      {
-        code0 = input.charAt(i);
-        i++;
-        if (i < input.length())
-        {
-          code1 = input.charAt(i);
-          char decodedChar = 0;
-          // 16進文字を数値に変換
-          if (code0 >= '0' && code0 <= '9')
-            decodedChar = (code0 - '0') << 4;
-          else if (code0 >= 'A' && code0 <= 'F')
-            decodedChar = (code0 - 'A' + 10) << 4;
-          else if (code0 >= 'a' && code0 <= 'f')
-            decodedChar = (code0 - 'a' + 10) << 4;
-          else
-          {                       // 不正なエンコード形式
-            decodedString += '%'; // '%'をそのまま追加
-            i -= 2;               // インデックスを戻す
-            continue;
-          }
-
-          if (code1 >= '0' && code1 <= '9')
-            decodedChar |= (code1 - '0');
-          else if (code1 >= 'A' && code1 <= 'F')
-            decodedChar |= (code1 - 'A' + 10);
-          else if (code1 >= 'a' && code1 <= 'f')
-            decodedChar |= (code1 - 'a' + 10);
-          else
-          { // 不正なエンコード形式
-            decodedString += '%';
-            decodedString += code0;
-            i--;
-            continue;
-          }
-          decodedString += decodedChar;
-        }
-        else
-        { // %XX の形式でない
-          decodedString += '%';
-          decodedString += code0;
-        }
-      }
-      else
-      { // 文字列末尾が %
-        decodedString += '%';
-      }
-    }
-    else
-    {
-      decodedString += c;
-    }
-  }
-  return decodedString;
-}
-
-void requestManage()
-{
-  if (RTC_ADJUST_ON && RTC_ENABLE && (millis() - TM_SETUP_DONE > TM_RTC_ADJUST))
-  {
-    adjustRTC();
-    RTC_ADJUST_ON = false;
-  }
-
-  if (REQUEST_NO == REQ_NONE)
-    return;
-
-  int req = REQUEST_NO;
-  switch (req)
-  {
-  case REQ_REBOOT:
-    REQUEST_NO = REQ_NONE;
-    REBOOT();
-    return;
-
-  case REQ_SHUTDOWN:
-    REQUEST_NO = REQ_NONE;
-    // SHUTDOWN_TM_SEC = 0;
-    POWER_OFF();
-    return;
-
-  default:
-    REQUEST_NO = REQ_NONE;
-    Serial.println("requeestManage : invalid request get ");
-  }
-  return;
-}
-
-void sendReq(int reqNo)
-{
-  REQUEST_NO = reqNo;
-}
-
 void STOP()
 {
   Serial.println(" *** Stop *** fatal error");
@@ -615,3 +461,4 @@ bool SD_cardInfo(void)
   }
   return true;
 }
+
