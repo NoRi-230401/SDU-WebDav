@@ -1,8 +1,14 @@
+#if defined(ENABLE_SD_UPDATER)
+
 #include <Arduino.h>
 #include <M5Unified.h>
+// #include <ESP32-targz.h>
 #include <M5StackUpdater.h>
+#include "SDUpdater.h"
+
 
 #define SDU_SKIP_TMR 5000 // skip timer : ms
+
 void SDU_lobby(String PROG_NAME)
 {
   SDUCfg.setAppName(PROG_NAME.c_str()); // lobby screen label: application name
@@ -17,3 +23,5 @@ void SDU_lobby(String PROG_NAME)
 
   Serial.println("SDU_lobby done");
 }
+
+#endif

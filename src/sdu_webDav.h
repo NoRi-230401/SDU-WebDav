@@ -17,9 +17,9 @@
 #include <ESPWebDAV.h>
 
 // --- used in 'main.cpp' ---- 
-extern void SDU_lobby(String PROG_NAME);    // SDUpdater.cpp
 extern bool setupNetwork();
 extern void STOP();
+extern void prt(String message);
 
 //---- units ------
 #define UNIT_AUTO 1
@@ -40,6 +40,5 @@ extern const String YOUR_SSID, YOUR_SSID_PASS, YOUR_HOST_NAME;
 extern const String WIFI_TXT;
 extern bool DISP_ON;
 extern String SSID, SSID_PASS, HOST_NAME,IP_ADDR;
-// extern bool RTC_ENABLE;
 // -------------------------------------------------------
 #endif

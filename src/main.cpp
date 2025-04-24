@@ -3,6 +3,12 @@
 // *****************************************************
 #include "sdu_webDav.h"
 
+#if defined(ENABLE_SD_UPDATER)
+#include "SDUpdater.h"
+#endif
+
+
+
 #if defined(ENABLE_SD_SELECT)
 FS &DAV_FS = SD;
 const String PROG_NAME = "WebDav SD";
@@ -25,7 +31,7 @@ const String YOUR_SSID = "your_wifi_ssid";
 const String YOUR_SSID_PASS = "your_wifi_ssid_password";
 const String YOUR_HOST_NAME = "stackchan";
 //-------------------------------------------------------------------
-bool DISP_ON = true;    // 'false' if don't disp message on the display
+bool DISP_ON = true; // 'false' if don't disp message on the display
 //-------------------------------------------------------------------
 
 WiFiServer tcp(80);
@@ -36,6 +42,7 @@ void setup(void)
   auto cfg = M5.config();
   cfg.serial_baudrate = 115200;
   M5.begin(cfg);
+  
 
 #if defined(ENABLE_SD_UPDATER)
   SDU_lobby(PROG_NAME);
@@ -54,7 +61,7 @@ void setup(void)
 
   String msg = "\n\\\\" + HOST_NAME + "\\DavWWWRoot";
   prt(msg);
-  // dav.setDAVRoot(msg);
+  
 }
 
 void loop(void)
