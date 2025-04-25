@@ -3,41 +3,26 @@
 // -------------------------------------------------------
 // fs_util.cpp
 // *******************************************************
-#include "sdu_webDav.h"
+#include "SDU_webDav.h"
 
 bool setupNetwork();
 void prt(String message);
-String ConvBytesUnits(uint64_t bytes, int dp, int unit);
 bool wifiStart();
 bool mdnsStart(void);
-void adjustRTC();
-String getTmNTP();
-String getTmRTC();
-String strTmInfo(struct tm &timeInfo);
 bool getWiFiSettings(int flType, const String filename);
 void STOP();
-void REBOOT();
-void POWER_OFF();
 bool FS_start(int flType);
 bool SD_cardInfo(void);
 
+// - File System Types -
+#define FS_SPIFFS 1
+#define FS_SD 2
 // -------------------------------------------------------
-uint32_t SHUTDOWN_TM_SEC = 3; // default 3sec after shutdown api
-
 // NTP connection information.
 #define NTP_SVR1 "ntp.nict.jp"         // NTP server1
 #define NTP_SVR2 "ntp.jst.mfeed.ad.jp" // NTP server2
 #define NTP_GMT_OFFSET 9 * 3600L       // Sec  : GMT offset
 #define NTP_DAYLIGHT_OFFSET 0          // Sec  : daylight offset
-
-// RTC adjust
-uint32_t TM_RTC_ADJUST = 10 * 1000L; // mSec : adjust after setup()
-uint32_t TM_SETUP_DONE = 0;
-
-///////////////// 250423 by Nori ////////////
-// bool RTC_ENABLE = false;
-// bool RTC_ADJUST_ON = false; // 'false' if don't adjust RTC
-////////////////////////////////////////////
 
 String SSID, SSID_PASS, HOST_NAME,IP_ADDR;
 bool SD_ENABLE, SPIFFS_ENABLE;
@@ -47,8 +32,11 @@ bool SPIFFS_USE = true;
 
 bool setupNetwork()
 {
+  Serial.println(__FILE__);
+  Serial.println(GITHUB_URL);
+  Serial.println(VERSION);
   prt("-   " + PROG_NAME + "   -\n");
-
+    
   // --- SD and SPIFFS start ---
   SD_ENABLE = false;
   if (SD_USE)
@@ -132,10 +120,6 @@ bool setupNetwork()
   // }
 
   prt("\nIP Addr: " + IP_ADDR);
-  // prt("\nHostName: " + HOST_NAME);
-
-  // TM_SETUP_DONE = millis();
-
   return true;
 }
 
@@ -145,64 +129,6 @@ void prt(String message)
 
   if (DISP_ON)
     M5.Display.println(message);
-}
-
-String ConvBytesUnits(uint64_t bytes, int dp, int unit)
-{ // int dp : 小数点以下の桁数、decimal places
-  const uint64_t KILO = 1024ULL;
-  const uint64_t MEGA = KILO * KILO;
-  const uint64_t GIGA = MEGA * KILO;
-  const uint64_t TERA = GIGA * KILO;
-
-  if (unit == UNIT_AUTO)
-  {
-    if (bytes < KILO)
-    {
-      return (String(bytes) + " B");
-    }
-    else if (bytes < MEGA)
-    {
-      float kb = (float)bytes / (float)KILO;
-      return String(kb, dp) + " KB";
-    }
-    else if (bytes < GIGA)
-    {
-      float mb = (float)bytes / (float)MEGA;
-      return (String(mb, dp) + " MB");
-    }
-    else if (bytes < TERA)
-    {
-      float gb = (float)bytes / (float)GIGA;
-      return (String(gb, dp) + " GB");
-    }
-    else
-    {
-      float tb = (float)bytes / (float)TERA;
-      return (String(tb, dp) + " TB");
-    }
-  }
-  else if (unit == UNIT_KIRO)
-  {
-    float kb = (float)bytes / (float)KILO;
-    return String(kb, dp) + " KB";
-  }
-  else if (unit == UNIT_MEGA)
-  {
-    float mb = (float)bytes / (float)MEGA;
-    return (String(mb, dp) + " MB");
-  }
-  else if (unit == UNIT_GIGA)
-  {
-    float gb = (float)bytes / (float)GIGA;
-    return (String(gb, dp) + " GB");
-  }
-  else if (unit == UNIT_TERA)
-  {
-    float tb = (float)bytes / (float)TERA;
-    return (String(tb, dp) + " TB");
-  }
-  // UNIT_BYTE
-  return (String(bytes) + " B");
 }
 
 bool wifiStart()
@@ -244,54 +170,6 @@ bool mdnsStart(void)
 
   Serial.println("mDNS HostName = " + HOST_NAME);
   return true;
-}
-
-void adjustRTC()
-{
-  struct tm tmInfo;
-
-  while (!getLocalTime(&tmInfo, 1000U))
-    delay(10);
-
-  M5.Rtc.setDateTime(tmInfo);
-  Serial.println("\nRTC adjusted .... " + strTmInfo(tmInfo));
-}
-
-String getTmRTC()
-{
-  char buf[60];
-  static constexpr const char *const wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat"};
-  auto dt = M5.Rtc.getDateTime();
-  sprintf(buf, "%04d/%02d/%02d(%s) %02d:%02d:%02d", dt.date.year, dt.date.month, dt.date.date, wd[dt.date.weekDay], dt.time.hours, dt.time.minutes, dt.time.seconds);
-
-  return String(buf);
-}
-
-String getTmNTP()
-{
-  struct tm Ldt;
-  for (int i = 0; i < 5; i++)
-  {
-    if (getLocalTime(&Ldt, 1000U))
-      return strTmInfo(Ldt);
-
-    delay(10);
-  }
-
-  String errStr = "2025/04/01(Tue) 00:00:00";
-  return errStr;
-}
-
-String strTmInfo(struct tm &timeInfo)
-{
-  char buf[60];
-  static constexpr const char *const wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat"};
-
-  sprintf(buf, "%04d/%02d/%02d(%s) %02d:%02d:%02d",
-          timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
-          wd[timeInfo.tm_wday], timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
-
-  return String(buf);
 }
 
 bool getWiFiSettings(int flType, const String filename)
@@ -375,35 +253,6 @@ void STOP()
   }
 }
 
-void REBOOT()
-{
-  Serial.println(" *** Reboot ***");
-  SD.end();
-  SPIFFS.end();
-  delay(SHUTDOWN_TM_SEC * 1000L);
-  ESP.restart();
-
-  for (;;)
-  { // never
-    delay(1000);
-  }
-}
-
-void POWER_OFF()
-{
-  Serial.println(" *** POWER OFF ***");
-
-  SD.end();
-  SPIFFS.end();
-  delay(SHUTDOWN_TM_SEC * 1000L);
-  M5.Power.powerOff();
-
-  for (;;)
-  { // never
-    delay(1000);
-  }
-}
-
 bool FS_start(int flType)
 {
   if (flType == FS_SPIFFS)
@@ -461,4 +310,3 @@ bool SD_cardInfo(void)
   }
   return true;
 }
-

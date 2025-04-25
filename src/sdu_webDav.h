@@ -1,7 +1,7 @@
 // *******************************************************
 //  SDU_webDav          by NoRi 2025-04-15
 // -------------------------------------------------------
-// sdu_webDav.h
+// SDU_webDav.h
 // *******************************************************
 #ifndef _SDU_WEB_DAV_H
 #define _SDU_WEB_DAV_H
@@ -16,23 +16,8 @@
 #include <time.h>
 #include <ESPWebDAV.h>
 
-// --- used in 'main.cpp' ---- 
 extern bool setupNetwork();
 extern void STOP();
-extern void prt(String message);
-
-//---- units ------
-#define UNIT_AUTO 1
-#define UNIT_BYTE 2
-#define UNIT_KIRO 3
-#define UNIT_MEGA 4
-#define UNIT_GIGA 5
-#define UNIT_TERA 6
-
-// - File System Types -
-#define FS_SPIFFS 1
-#define FS_SD 2
-
 extern void prt(String message);
 // -------------------------------------------------------
 extern const String PROG_NAME,VERSION,GITHUB_URL;

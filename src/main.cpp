@@ -1,25 +1,20 @@
 // *****************************************************
 //  SDU-WebDav  main.cpp           2025-04-23  by NoRi
 // *****************************************************
-#include "sdu_webDav.h"
-
-#if defined(ENABLE_SD_UPDATER)
+#include "SDU_webDav.h"
 #include "SDUpdater.h"
-#endif
 
-
+const String VERSION = "v103a-250425";
+const String GITHUB_URL = "https://github.com/NoRi-230401/SDU-WebDav";
+// -------------------------------------------------------
 
 #if defined(ENABLE_SD_SELECT)
 FS &DAV_FS = SD;
-const String PROG_NAME = "WebDav SD";
+const String PROG_NAME = "SDU-WebDav SD";
 #else
 FS &DAV_FS = SPIFFS;
-const String PROG_NAME = "WebDav SPIFFS";
+const String PROG_NAME = "SDU-WebDav SPIFFS";
 #endif
-
-const String VERSION = "v102c-250424";
-const String GITHUB_URL = "https://github.com/NoRi-230401/SDU-WebDav";
-// -------------------------------------------------------
 
 // ******************
 // *   SETTINGS     *
@@ -43,7 +38,6 @@ void setup(void)
   cfg.serial_baudrate = 115200;
   M5.begin(cfg);
   
-
 #if defined(ENABLE_SD_UPDATER)
   SDU_lobby(PROG_NAME);
 #else
