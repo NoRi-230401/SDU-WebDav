@@ -24,19 +24,18 @@ bool SD_cardInfo(void);
 #define NTP_GMT_OFFSET 9 * 3600L       // Sec  : GMT offset
 #define NTP_DAYLIGHT_OFFSET 0          // Sec  : daylight offset
 
-String SSID, SSID_PASS, HOST_NAME,IP_ADDR;
+String SSID, SSID_PASS, HOST_NAME, IP_ADDR;
 bool SD_ENABLE, SPIFFS_ENABLE;
 bool SD_USE = true;
 bool SPIFFS_USE = true;
-
 
 bool setupNetwork()
 {
   Serial.println(__FILE__);
   Serial.println(GITHUB_URL);
   Serial.println(VERSION);
-  prt("-   " + PROG_NAME + "   -\n");
-    
+  prt("@ " + PROG_NAME);
+
   // --- SD and SPIFFS start ---
   SD_ENABLE = false;
   if (SD_USE)
@@ -70,13 +69,19 @@ bool setupNetwork()
   HOST_NAME = "";
 
   if (SD_ENABLE && getWiFiSettings(FS_SD, WIFI_TXT))
-    prt(" Settings read from SD");
+  {
+    ;
+    Serial.println(" SD Settings RD");
+  }
   else if (SPIFFS_ENABLE && getWiFiSettings(FS_SPIFFS, WIFI_TXT))
-    prt(" Settings read from SPIFFS");
+  {
+    ;
+    Serial.println(" SPIFFS Settings RD");
+  }
 
   if (SSID == "")
     SSID = YOUR_SSID;
-  prt(" SSID: " + SSID);
+  Serial.println(" SSID: " + SSID);
 
   if (SSID_PASS == "")
     SSID_PASS = YOUR_SSID_PASS;
@@ -119,7 +124,7 @@ bool setupNetwork()
   //   RTC_ADJUST_ON = false;
   // }
 
-  prt("\nIP Addr: " + IP_ADDR);
+  prt("IP: " + IP_ADDR);
   return true;
 }
 

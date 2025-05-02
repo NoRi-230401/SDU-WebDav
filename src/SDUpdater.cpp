@@ -23,4 +23,27 @@ void SDU_lobby(String PROG_NAME)
   Serial.println("SDU_lobby done");
 }
 
-#endif
+#if defined(CARDPUTER)
+#include <M5Cardputer.h>
+extern SPIClass SPI2;
+void SDU_lobby_cardputer()
+{
+  while (false == SD.begin(M5.getPin(m5::pin_name_t::sd_spi_ss), SPI2))
+  {
+      delay(500);
+  }
+  M5Cardputer.update();
+  
+  if (M5Cardputer.Keyboard.isKeyPressed('a'))
+  {
+      updateFromFS(SD, "/menu.bin");
+      ESP.restart();
+      
+  }
+
+  // delay(5000);
+  Serial.println("\nSDU_lobby_cardputer done");
+}
+#endif   // end of CARDPUTER
+
+#endif   // end of ENABLE_SD_UPDATER

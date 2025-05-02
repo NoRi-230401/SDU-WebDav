@@ -4,7 +4,12 @@
 #include "SDU_webDav.h"
 #include "SDUpdater.h"
 
-const String VERSION = "v103a-250425";
+#if defined(CARDPUTER)
+#include <M5Cardputer.h>
+SPIClass SPI2;
+#endif
+
+const String VERSION = "v104-250425";
 const String GITHUB_URL = "https://github.com/NoRi-230401/SDU-WebDav";
 // -------------------------------------------------------
 
@@ -36,13 +41,28 @@ void setup(void)
 {
   auto cfg = M5.config();
   cfg.serial_baudrate = 115200;
+
+// ---- CARDPUTER ---------------
+#if defined(CARDPUTER)
+  M5Cardputer.begin(cfg, true);
+  SPI2.begin(
+      M5.getPin(m5::pin_name_t::sd_spi_sclk),
+      M5.getPin(m5::pin_name_t::sd_spi_miso),
+      M5.getPin(m5::pin_name_t::sd_spi_mosi),
+      M5.getPin(m5::pin_name_t::sd_spi_ss));
+#if defined(ENABLE_SD_UPDATER)
+    SDU_lobby_cardputer();
+#endif    
+
+// ---- Core2 CoreS3 -------------
+#else
   M5.begin(cfg);
-  
 #if defined(ENABLE_SD_UPDATER)
   SDU_lobby(PROG_NAME);
-#else
-  delay(1000); // Wait until the serial setup is complete
 #endif
+#endif   // end of CARDPUTER
+
+  delay(1000);
 
   M5.Display.setBrightness(120);
   M5.Lcd.setTextSize(2);
@@ -53,9 +73,8 @@ void setup(void)
   tcp.begin();
   dav.begin(&tcp, &DAV_FS);
 
-  String msg = "\n\\\\" + HOST_NAME + "\\DavWWWRoot";
+  String msg = "\\\\" + HOST_NAME + "\\DavWWWRoot";
   prt(msg);
-  
 }
 
 void loop(void)
