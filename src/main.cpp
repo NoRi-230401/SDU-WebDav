@@ -9,16 +9,16 @@
 SPIClass SPI2;
 #endif
 
-const String VERSION = "v104-250425";
+const String VERSION = "v104-250508";
 const String GITHUB_URL = "https://github.com/NoRi-230401/SDU-WebDav";
 // -------------------------------------------------------
 
 #if defined(ENABLE_SD_SELECT)
 FS &DAV_FS = SD;
-const String PROG_NAME = "SDU-WebDav SD";
+const String PROG_NAME = "WebDav SD";
 #else
 FS &DAV_FS = SPIFFS;
-const String PROG_NAME = "SDU-WebDav SPIFFS";
+const String PROG_NAME = "WebDav SPIFFS";
 #endif
 
 // ******************

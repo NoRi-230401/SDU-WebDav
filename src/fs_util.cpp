@@ -34,7 +34,7 @@ bool setupNetwork()
   Serial.println(__FILE__);
   Serial.println(GITHUB_URL);
   Serial.println(VERSION);
-  prt("@ " + PROG_NAME);
+  prt("- " + PROG_NAME + " -");
 
   // --- SD and SPIFFS start ---
   SD_ENABLE = false;
