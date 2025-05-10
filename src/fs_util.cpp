@@ -11,12 +11,13 @@ bool wifiStart();
 bool mdnsStart(void);
 bool getWiFiSettings(int flType, const String filename);
 void STOP();
-bool FS_start(int flType);
+bool SPIFFS_begin();
+void SPIFFS_start();
+bool SD_begin();
+void SD_start();
 bool SD_cardInfo(void);
+void DISP_start();
 
-// - File System Types -
-#define FS_SPIFFS 1
-#define FS_SD 2
 // -------------------------------------------------------
 // NTP connection information.
 #define NTP_SVR1 "ntp.nict.jp"         // NTP server1
@@ -31,53 +32,15 @@ bool SPIFFS_USE = true;
 
 bool setupNetwork()
 {
-  Serial.println(__FILE__);
-  Serial.println(GITHUB_URL);
-  Serial.println(VERSION);
-  prt("- " + PROG_NAME + " -");
-
-  // --- SD and SPIFFS start ---
-  SD_ENABLE = false;
-  if (SD_USE)
-  {
-    SD_ENABLE = FS_start(FS_SD);
-    if (SD_ENABLE)
-      prt("SD      .....  OK");
-    else
-      prt("SD      .....  NG");
-  }
-
-  SPIFFS_ENABLE = false;
-  if (SPIFFS_USE)
-  {
-    SPIFFS_ENABLE = FS_start(FS_SPIFFS);
-    if (SPIFFS_ENABLE)
-      prt("SPIFFS  .....  OK");
-    else
-      prt("SPIFFS  .....  NG");
-  }
-
-  if (!SPIFFS_ENABLE && !SD_ENABLE)
-  {
-    prt("Both SD and SPIFFS are not available");
-    return false;
-  }
-
   // ------- Network Settings Read ---------
   SSID = "";
   SSID_PASS = "";
   HOST_NAME = "";
 
   if (SD_ENABLE && getWiFiSettings(FS_SD, WIFI_TXT))
-  {
-    ;
     Serial.println(" SD Settings RD");
-  }
   else if (SPIFFS_ENABLE && getWiFiSettings(FS_SPIFFS, WIFI_TXT))
-  {
-    ;
     Serial.println(" SPIFFS Settings RD");
-  }
 
   if (SSID == "")
     SSID = YOUR_SSID;
@@ -258,34 +221,82 @@ void STOP()
   }
 }
 
-bool FS_start(int flType)
+bool SPIFFS_begin()
 {
-  if (flType == FS_SPIFFS)
+  if (!SPIFFS.begin(true))
   {
-    if (!SPIFFS.begin(true))
-    {
-      Serial.println("ERR: SPIFFS begin erro...");
-      return false;
-    }
-    return true;
-  }
-  else if (flType == FS_SD)
-  {
-    if (!SD.begin(GPIO_NUM_4, SPI, 25000000))
-    {
-      Serial.println("ERR: SD begin erro...");
-      return false;
-    }
-
-    if (!SD_cardInfo())
-      return false;
-
-    return true;
-  }
-  else
-  {
-    Serial.println("FS_start Err: invalid flType");
+    Serial.println("ERR: SPIFFS begin erro...");
     return false;
+  }
+  return true;
+}
+
+void SPIFFS_start()
+{
+  SPIFFS_ENABLE = false;
+  if (SPIFFS_USE)
+  {
+    SPIFFS_ENABLE = SPIFFS_begin();
+    if (SPIFFS_ENABLE)
+      prt("SPIFFS  .....  OK");
+    else
+      prt("SPIFFS  .....  NG");
+  }
+}
+
+SPIClass SPI2;
+bool SD_begin()
+{
+  int i;
+
+#if defined(CARDPUTER)
+  // ------------- CARDPUTER -------------
+  SPI2.begin(
+      M5.getPin(m5::pin_name_t::sd_spi_sclk),
+      M5.getPin(m5::pin_name_t::sd_spi_miso),
+      M5.getPin(m5::pin_name_t::sd_spi_mosi),
+      M5.getPin(m5::pin_name_t::sd_spi_ss));
+
+  i = 0;
+  while (!SD.begin(M5.getPin(m5::pin_name_t::sd_spi_ss), SPI2) && i < 10)
+  {
+    delay(500);
+    i++;
+  }
+
+#else
+  // ----------- Core2 and CoreS3 ----------
+  i = 0;
+  while (!SD.begin(GPIO_NUM_4, SPI, 25000000) && i < 10)
+  {
+    delay(500);
+    i++;
+  }
+#endif
+
+  if (i >= 10)
+  {
+    Serial.println("ERR: SD begin erro...");
+    return false;
+  }
+
+  if (!SD_cardInfo())
+    return false;
+
+  return true;
+}
+
+void SD_start()
+{
+  // --- SD and SPIFFS start ---
+  SD_ENABLE = false;
+  if (SD_USE)
+  {
+    SD_ENABLE = SD_begin();
+    if (SD_ENABLE)
+      prt("SD      .....  OK");
+    else
+      prt("SD      .....  NG");
   }
 }
 
@@ -315,3 +326,11 @@ bool SD_cardInfo(void)
   }
   return true;
 }
+
+void DISP_start()
+{
+  M5.Display.setBrightness(120);
+  M5.Lcd.setTextSize(2);
+  prt("- " + PROG_NAME + " -");
+}
+

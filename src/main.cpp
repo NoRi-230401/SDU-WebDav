@@ -6,10 +6,9 @@
 
 #if defined(CARDPUTER)
 #include <M5Cardputer.h>
-SPIClass SPI2;
 #endif
 
-const String VERSION = "v104-250508";
+const String VERSION = "v105-250510";
 const String GITHUB_URL = "https://github.com/NoRi-230401/SDU-WebDav";
 // -------------------------------------------------------
 
@@ -45,14 +44,11 @@ void setup(void)
 // ---- CARDPUTER ---------------
 #if defined(CARDPUTER)
   M5Cardputer.begin(cfg, true);
-  SPI2.begin(
-      M5.getPin(m5::pin_name_t::sd_spi_sclk),
-      M5.getPin(m5::pin_name_t::sd_spi_miso),
-      M5.getPin(m5::pin_name_t::sd_spi_mosi),
-      M5.getPin(m5::pin_name_t::sd_spi_ss));
+  DISP_start();
+  SD_start();
 #if defined(ENABLE_SD_UPDATER)
-    SDU_lobby_cardputer();
-#endif    
+  SDU_lobby_cardputer();
+#endif
 
 // ---- Core2 CoreS3 -------------
 #else
@@ -60,12 +56,11 @@ void setup(void)
 #if defined(ENABLE_SD_UPDATER)
   SDU_lobby(PROG_NAME);
 #endif
-#endif   // end of CARDPUTER
+  DISP_start();
+  SD_start();
+#endif // end of CARDPUTER
 
-  delay(1000);
-
-  M5.Display.setBrightness(120);
-  M5.Lcd.setTextSize(2);
+  SPIFFS_start();
 
   if (!setupNetwork())
     STOP();
